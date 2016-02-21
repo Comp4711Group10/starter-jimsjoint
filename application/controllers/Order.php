@@ -17,8 +17,13 @@ class Order extends Application {
 
     // start a new order
     function neworder() {
-        //FIXME
-
+        $order_num = $this->orders->highest() + 1;
+        $neworder = $this->orders->create();
+        $neworder->num = $order_num;
+        $neworder->date = date();
+        $neworder->status = 'a';
+        $neworder->total = 0;
+        $this->orders->add($neworder);
         redirect('/order/display_menu/' . $order_num);
     }
 
@@ -69,7 +74,8 @@ class Order extends Application {
 
     // add an item to an order
     function add($order_num, $item) {
-        //FIXME
+        $this->orders->add_item($order_num, $item);
+        
         redirect('/order/display_menu/' . $order_num);
     }
 
@@ -85,13 +91,24 @@ class Order extends Application {
 
     // proceed with checkout
     function commit($order_num) {
-        //FIXME
+        if (!$this->orders->validate($order_num))
+        {
+            redirect('/order/display_menu/' . $order_num);
+        }
+        $record = $this->orders->get($order_num);
+        $record->date = date(DATE_ATOM);
+        $record->status = 'c';
+        $record->total = $this->orders->total($order_num);
+        $this->orders->update($record);
         redirect('/');
     }
 
     // cancel the order
     function cancel($order_num) {
-        //FIXME
+        $this->orders->flush($order_num);
+        $record = $this->orders->get($order_num);
+        $record->status = 'x';
+        $this->orders->update($record);
         redirect('/');
     }
 
